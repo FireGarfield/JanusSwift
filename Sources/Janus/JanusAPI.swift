@@ -41,7 +41,9 @@ public class JanusAPI {
     {
         let transaction = "trickle"
         let request = TrickleRequest(transaction: transaction,
-                                     candidate: .init(candidate: candidate, sdpMLineIndex: sdpMLineIndex, sdpMid: sdpMid))
+                                     candidate: .init(candidate: candidate,
+                                                      sdpMLineIndex: sdpMLineIndex,
+                                                      sdpMid: sdpMid))
         apiClient.request(.trickle(sessionId, handleId, request)) { (_: Result<TrickleResponse, APIError>) in
             completion?()
         }
@@ -108,7 +110,8 @@ public class JanusAPI {
         }
     }
 
-    private func sendLongPoll<T: Decodable>(sessionId: Int, completion: ((Result<T, APIError>) -> Void)? = nil) {
+    private func sendLongPoll<T: Decodable>(sessionId: Int,
+                                            completion: ((Result<T, APIError>) -> Void)? = nil) {
         apiClient.request(.longPoll(sessionId)) { (result: Result<T, APIError>) in
             completion?(result)
         }
