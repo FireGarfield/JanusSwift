@@ -11,7 +11,9 @@ struct StreamView: View {
                     .frame(height: 200)
             }
         }
-        .onAppear(perform: viewModel.watch)
         .navigationBarTitle(viewModel.selectedStream?.description ?? "")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear(perform: viewModel.watch)
+        .onDisappear(perform: viewModel.endWatch)
     }
 }

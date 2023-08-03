@@ -22,7 +22,7 @@ class WebRTCClient: NSObject {
         return config
     }()
     
-    private let peerConnection: RTCPeerConnection
+    private let peerConnection: RTCPeerConnection!
     private var remoteVideoTrack: RTCVideoTrack?
     weak var delegate: WebRTCClientDelegate?
     
@@ -34,10 +34,12 @@ class WebRTCClient: NSObject {
     }
     
     func answer(remoteSdp: String, completion: @escaping (String) -> Void) {
-        peerConnection.setRemoteDescription(.init(type: .offer, sdp: remoteSdp)) { [unowned self] error in
+        peerConnection.setRemoteDescription(.init(type: .offer, sdp: remoteSdp)) { [weak self] error in
+            guard let self = self else { return }
             guard error == nil else { return }
             let constrains = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
-            self.peerConnection.answer(for: constrains) { [unowned self] sessionDescription, _ in
+            self.peerConnection.answer(for: constrains) { [weak self] sessionDescription, _ in
+                guard let self = self else { return }
                 guard let sessionDescription = sessionDescription else { return }
                 self.peerConnection.setLocalDescription(sessionDescription) { error in
                     guard error == nil else { return }
@@ -57,7 +59,8 @@ extension WebRTCClient: RTCPeerConnectionDelegate {
     func peerConnection(_ peerConnection: RTCPeerConnection, didStartReceivingOn transceiver: RTCRtpTransceiver) {
         if case .video = transceiver.mediaType {
             remoteVideoTrack = transceiver.receiver.track as? RTCVideoTrack
-            delegate?.webRTCClient(self, didSetRemoteVideoTrack: remoteVideoTrack!)
+            guard let remoteVideoTrack = remoteVideoTrack else { return }
+            delegate?.webRTCClient(self, didSetRemoteVideoTrack: remoteVideoTrack)
         }
     }
     

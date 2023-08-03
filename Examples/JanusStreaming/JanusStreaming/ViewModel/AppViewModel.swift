@@ -17,21 +17,24 @@ class AppViewModel: ObservableObject {
 
     let session = JanusAPI(baseUrl: URL(string: "https://janus.conf.meetecho.com/janus")!)
     let webRTCClient = WebRTCClient()
+
+    private var timer: DispatchSourceTimer?
     
-    private lazy var timer: DispatchSourceTimer = {
-        let timer = DispatchSource.makeTimerSource()
-        timer.schedule(deadline: .now() + .seconds(50), repeating: .seconds(50))
-        timer.setEventHandler { [unowned self] in
-            self.session.keepAlive(sessionId: self.sessionId!)
-        }
-        return timer
-    }()
+//    private lazy var timer: DispatchSourceTimer = {
+//        let timer = DispatchSource.makeTimerSource()
+//        timer.schedule(deadline: .now() + .seconds(50), repeating: .seconds(50))
+//        timer.setEventHandler { [weak self] in
+//            guard let self = self else { return }
+//            self.session.keepAlive(sessionId: self.sessionId!)
+//        }
+//        return timer
+//    }()
 
     init() {
         webRTCClient.delegate = self
     }
 
-    private func setup() {
+    func setup() {
         session.createSession { [unowned self] sessionId in
             DispatchQueue.main.async {
                 self.sessionId = sessionId
@@ -50,10 +53,23 @@ class AppViewModel: ObservableObject {
     }
 
     private func startKeepAliveTimer() {
+        self.timer?.setEventHandler {}
+        self.timer?.cancel()
+        self.timer = nil
+
+        let timer = DispatchSource.makeTimerSource()
+        timer.schedule(deadline: .now() + .seconds(50), repeating: .seconds(50))
+        timer.setEventHandler { [weak self] in
+            guard let self = self else { return }
+            guard let sessionId = self.sessionId else { return }
+            self.session.keepAlive(sessionId: sessionId)
+        }
         timer.resume()
+
+        self.timer = timer
     }
 
-    private func watch() {
+    func watch() {
         guard let sessionId = sessionId else { return }
         guard let handleId = handleId else { return }
         guard let streamId = selectedStream?.id else { return }
@@ -66,6 +82,13 @@ class AppViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    func endWatch() {
+        guard started else { return }
+
+        selectedStream = nil
+        started = false
     }
 }
 

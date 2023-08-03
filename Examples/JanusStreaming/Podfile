@@ -1,5 +1,8 @@
-target 'JanusStreaming' do  
+platform :ios, '15.0'
+
+target 'JanusStreaming' do
   use_frameworks!
 
-  pod 'GoogleWebRTC', '~> 1.1'
+#  pod 'GoogleWebRTC', '~> 1.1'
+#  pod 'WebRTC-lib'
 end
